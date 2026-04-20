@@ -389,8 +389,8 @@ def main() -> None:
     print_summary(report)
 
     if args.export_blocklist:
-    export_blocklist(report, args.export_blocklist)
-    print(f"\nBlocklist exported to: {args.export_blocklist}")
+        export_blocklist(report, args.export_blocklist)
+        print(f"\nBlocklist exported to: {args.export_blocklist}")
 
     print(f"\nJSON report written to: {args.output}")
 
