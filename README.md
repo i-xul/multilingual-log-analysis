@@ -60,7 +60,7 @@ python3 src/analyzer.py sample_logs/nginx_access_sample.log --output output/repo
   }
 }
 
-```markdown
+
 # Future ideas
 
 ## Version 2
