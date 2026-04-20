@@ -200,7 +200,9 @@ def analyze_lines(lines: List[str]) -> Dict:
         if keyword_hits:
             keyword_counter.update(keyword_hits)
             ip_stats[ip]["suspicious_hits"] += 1
-            suspicious_path_counter[path] += 1
+
+            if path != "unknown":
+                suspicious_path_counter[path] += 1
 
             suspicious_lines.append({
                 "ip": ip,
