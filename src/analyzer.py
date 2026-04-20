@@ -225,6 +225,23 @@ def analyze_lines(lines: List[str]) -> Dict:
             "score": round(score, 2),
         }
 
+        blocklist_candidates = {}
+
+    for ip, stats in ip_scores.items():
+        requests = stats["requests"]
+        suspicious_hits = stats["suspicious_hits"]
+        score = stats["score"]
+
+        if suspicious_hits >= 2 or (score == 1.0 and requests >= 2):
+            blocklist_candidates[ip] = {
+                "requests": requests,
+                "suspicious_hits": suspicious_hits,
+                "score": score,
+                "reason": "multiple suspicious hits"
+                if suspicious_hits >= 2
+                else "high confidence (score=1.0)"
+            }
+
     return {
         "total_lines": len(lines),
         "categorized_lines": {
@@ -241,6 +258,7 @@ def analyze_lines(lines: List[str]) -> Dict:
         "ip_scores": ip_scores,
         "suspicious_lines": suspicious_lines,
         "unknown_path_examples": unknown_path_lines,
+        "blocklist_candidates": blocklist_candidates,
     }
 
 
@@ -321,6 +339,16 @@ def print_summary(report: Dict) -> None:
     else:
         print("  No unknown path examples.")
 
+    print("\nBlocklist candidates:")
+    if report.get("blocklist_candidates"):
+        for ip, data in report["blocklist_candidates"].items():
+            print(
+                f"  {ip}: score={data['score']} "
+                f"(requests={data['requests']}, suspicious_hits={data['suspicious_hits']})"
+            )
+    else:
+        print("  No blocklist candidates.")
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -335,7 +363,18 @@ def parse_args() -> argparse.Namespace:
         default="output/report.json",
         help="Path to save the JSON report. Default: output/report.json",
     )
+    parser.add_argument(
+        "--export-blocklist",
+        help="Path to export blocklist candidates as a plain text file.",
+    )
     return parser.parse_args()
+
+def export_blocklist(report: Dict, path: str) -> None:
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+
+    with open(path, "w") as f:
+        for ip in report.get("blocklist_candidates", {}):
+            f.write(ip + "\n")
 
 
 def main() -> None:
@@ -348,6 +387,10 @@ def main() -> None:
     report = analyze_lines(lines)
     save_json(report, args.output)
     print_summary(report)
+
+        if args.export_blocklist:
+        export_blocklist(report, args.export_blocklist)
+        print(f"\nBlocklist exported to: {args.export_blocklist}")
 
     print(f"\nJSON report written to: {args.output}")
 
