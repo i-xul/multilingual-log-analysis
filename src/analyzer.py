@@ -104,7 +104,9 @@ def extract_path(text: str) -> str:
 
     valid_methods = {
         "GET", "POST", "HEAD", "PUT", "DELETE",
-        "OPTIONS", "PATCH", "CONNECT", "TRACE"
+        "OPTIONS", "PATCH", "CONNECT", "TRACE",
+        "PROPFIND", "PROPPATCH", "MKCOL", "COPY",
+        "MOVE", "LOCK", "UNLOCK", "SEARCH", "PRI"
     }
 
     if method not in valid_methods:
