@@ -114,6 +114,8 @@ def analyze_lines(lines: List[str]) -> Dict:
         },
         "top_source_ips": dict(ip_counter.most_common(10)),
         "suspicious_keyword_hits": dict(keyword_counter.most_common()),
+        "ip_scores": ip_scores,
+        "top_paths": dict(path_counter.most_common(10)),
         "suspicious_lines": suspicious_lines,
     }
 
