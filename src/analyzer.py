@@ -114,13 +114,58 @@ def extract_path(text: str) -> str:
 
     return target
 
+def classify_request_anomaly(text: str) -> str | None:
+    """
+    Classify clearly malformed or non-HTTP request lines.
+
+    Returns:
+        - empty_request
+        - non_http_request
+        - malformed_request
+        - None (if the request looks like a normal HTTP request)
+    """
+    request_match = re.search(r'"([^"]*)"', text)
+    if not request_match:
+        return "malformed_request"
+
+    request = request_match.group(1).strip()
+
+    if not request:
+        return "empty_request"
+
+    # Common signs of TLS/SSL or other binary/non-HTTP traffic sent to an HTTP port
+    if "\\x" in request or request.startswith("SSH-2.0"):
+        return "non_http_request"
+
+    parts = request.split()
+
+    # A normal HTTP request usually has at least METHOD + TARGET
+    if len(parts) < 2:
+        return "malformed_request"
+
+    method = parts[0]
+
+    valid_methods = {
+        "GET", "POST", "HEAD", "PUT", "DELETE",
+        "OPTIONS", "PATCH", "CONNECT", "TRACE",
+        "PROPFIND", "PROPPATCH", "MKCOL", "COPY",
+        "MOVE", "LOCK", "UNLOCK", "SEARCH", "PRI"
+    }
+
+    if method not in valid_methods:
+        return "malformed_request"
+
+    return None
+
 def analyze_lines(lines: List[str]) -> Dict:
-    unknown_path_lines = []
     categorized_counter = Counter()
     keyword_counter = Counter()
     ip_counter = Counter()
     path_counter = Counter()
+    suspicious_path_counter = Counter()
+    anomaly_counter = Counter()
     suspicious_lines = []
+    unknown_path_lines = []
     ip_stats = {}
 
     for line in lines:
@@ -134,8 +179,13 @@ def analyze_lines(lines: List[str]) -> Dict:
 
         path = extract_path(decoded_line)
         path_counter[path] += 1
+
         if path == "unknown" and len(unknown_path_lines) < 10:
             unknown_path_lines.append(line)
+
+        anomaly = classify_request_anomaly(decoded_line)
+        if anomaly:
+            anomaly_counter[anomaly] += 1
 
         if ip not in ip_stats:
             ip_stats[ip] = {
@@ -150,6 +200,7 @@ def analyze_lines(lines: List[str]) -> Dict:
         if keyword_hits:
             keyword_counter.update(keyword_hits)
             ip_stats[ip]["suspicious_hits"] += 1
+            suspicious_path_counter[path] += 1
 
             suspicious_lines.append({
                 "ip": ip,
@@ -182,7 +233,9 @@ def analyze_lines(lines: List[str]) -> Dict:
         },
         "top_source_ips": dict(ip_counter.most_common(10)),
         "top_paths": dict(path_counter.most_common(10)),
+        "top_suspicious_paths": dict(suspicious_path_counter.most_common(10)),
         "suspicious_keyword_hits": dict(keyword_counter.most_common()),
+        "request_anomalies": dict(anomaly_counter.most_common()),
         "ip_scores": ip_scores,
         "suspicious_lines": suspicious_lines,
         "unknown_path_examples": unknown_path_lines,
@@ -220,12 +273,26 @@ def print_summary(report: Dict) -> None:
     else:
         print("  No paths detected.")
 
+     print("\nTop suspicious paths:")
+    if report.get("top_suspicious_paths"):
+        for path, count in report["top_suspicious_paths"].items():
+            print(f"  {path}: {count}")
+    else:
+        print("  No suspicious paths detected.")
+
     print("\nSuspicious keywords:")
     if report["suspicious_keyword_hits"]:
         for keyword, count in report["suspicious_keyword_hits"].items():
             print(f"  {keyword}: {count}")
     else:
         print("  No suspicious keywords found.")
+
+    print("\nRequest anomalies:")
+    if report.get("request_anomalies"):
+        for anomaly, count in report["request_anomalies"].items():
+            print(f"  {anomaly}: {count}")
+    else:
+        print("  No request anomalies detected.")
 
     print("\nTop suspicious IP scores:")
     if report.get("ip_scores"):
