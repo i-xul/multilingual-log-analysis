@@ -273,7 +273,7 @@ def print_summary(report: Dict) -> None:
     else:
         print("  No paths detected.")
 
-     print("\nTop suspicious paths:")
+    print("\nTop suspicious paths:")
     if report.get("top_suspicious_paths"):
         for path, count in report["top_suspicious_paths"].items():
             print(f"  {path}: {count}")
