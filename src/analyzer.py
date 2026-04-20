@@ -70,20 +70,12 @@ def find_suspicious_keywords(text: str) -> List[str]:
     return hits
 
 
-def extract_ip(text: str) -> str:
-    """
-    Try to extract an IPv4 address from a log line.
-    Returns 'unknown' if no IP is found.
-    """
-    match = re.search(r"\b(?:\d{1,3}\.){3}\d{1,3}\b", text)
-    return match.group(0) if match else "unknown"
-
-
 def analyze_lines(lines: List[str]) -> Dict:
     categorized_counter = Counter()
     keyword_counter = Counter()
     ip_counter = Counter()
     suspicious_lines = []
+    ip_stats = {}
 
     for line in lines:
         category = detect_language_category(line)
@@ -92,9 +84,19 @@ def analyze_lines(lines: List[str]) -> Dict:
         ip = extract_ip(line)
         ip_counter[ip] += 1
 
+        if ip not in ip_stats:
+            ip_stats[ip] = {
+                "requests": 0,
+                "suspicious_hits": 0,
+            }
+
+        ip_stats[ip]["requests"] += 1
+
         keyword_hits = find_suspicious_keywords(line)
         if keyword_hits:
             keyword_counter.update(keyword_hits)
+            ip_stats[ip]["suspicious_hits"] += 1
+
             suspicious_lines.append(
                 {
                     "ip": ip,
@@ -102,6 +104,33 @@ def analyze_lines(lines: List[str]) -> Dict:
                     "keywords": keyword_hits,
                     "line": line,
                 }
+            )
+
+    ip_scores = {}
+    for ip, stats in ip_stats.items():
+        requests = stats["requests"]
+        suspicious_hits = stats["suspicious_hits"]
+        score = suspicious_hits / requests if requests else 0.0
+
+        ip_scores[ip] = {
+            "requests": requests,
+            "suspicious_hits": suspicious_hits,
+            "score": round(score, 2),
+        }
+
+    return {
+        "total_lines": len(lines),
+        "categorized_lines": {
+            "ru_or_ua": categorized_counter.get("ru_or_ua", 0),
+            "latin_only": categorized_counter.get("latin_only", 0),
+            "mixed": categorized_counter.get("mixed", 0),
+            "unknown": categorized_counter.get("unknown", 0),
+        },
+        "top_source_ips": dict(ip_counter.most_common(10)),
+        "suspicious_keyword_hits": dict(keyword_counter.most_common()),
+        "ip_scores": ip_scores,
+        "suspicious_lines": suspicious_lines,
+    }
             )
 
     return {
