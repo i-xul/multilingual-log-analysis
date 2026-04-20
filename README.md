@@ -37,6 +37,8 @@ That means:
   - `unknown`
 - Detects suspicious security-related keywords
 - Produces a summary report in JSON
+- extracts frequently requested paths from real Nginx access logs
+- highlights suspicious probes such as `/.git/config`, `/etc/passwd`, and admin/login endpoints
 
 ## Current status
 
