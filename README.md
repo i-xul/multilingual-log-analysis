@@ -41,6 +41,7 @@ Initial working prototype.
 
 ```bash
 python3 src/analyzer.py sample_logs/nginx_access_sample.log --output output/report.json
+```bash
 
 ## Example output
 
