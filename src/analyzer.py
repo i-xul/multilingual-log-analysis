@@ -82,12 +82,38 @@ def extract_ip(text: str) -> str:
 def extract_path(text: str) -> str:
     """
     Try to extract the request path from a typical Nginx access log line.
-    Returns 'unknown' if no path is found.
+
+    Supports:
+    - normal requests like: "GET /admin HTTP/1.1"
+    - special requests like: "OPTIONS * HTTP/1.0"
+
+    Returns 'unknown' if no usable path is found.
     """
-    match = re.search(r'"[A-Z]+\s+([^ ]+)\s+HTTP/[0-9.]+"', text)
-    return match.group(1) if match else "unknown"
+    request_match = re.search(r'"([^"]+)"', text)
+    if not request_match:
+        return "unknown"
+
+    request = request_match.group(1).strip()
+    parts = request.split()
+
+    if len(parts) < 2:
+        return "unknown"
+
+    method = parts[0]
+    target = parts[1]
+
+    valid_methods = {
+        "GET", "POST", "HEAD", "PUT", "DELETE",
+        "OPTIONS", "PATCH", "CONNECT", "TRACE"
+    }
+
+    if method not in valid_methods:
+        return "unknown"
+
+    return target
 
 def analyze_lines(lines: List[str]) -> Dict:
+    unknown_path_lines = []
     categorized_counter = Counter()
     keyword_counter = Counter()
     ip_counter = Counter()
@@ -106,6 +132,8 @@ def analyze_lines(lines: List[str]) -> Dict:
 
         path = extract_path(decoded_line)
         path_counter[path] += 1
+        if path == "unknown" and len(unknown_path_lines) < 10:
+        unknown_path_lines.append(line)
 
         if ip not in ip_stats:
             ip_stats[ip] = {
@@ -155,6 +183,7 @@ def analyze_lines(lines: List[str]) -> Dict:
         "suspicious_keyword_hits": dict(keyword_counter.most_common()),
         "ip_scores": ip_scores,
         "suspicious_lines": suspicious_lines,
+        "unknown_path_examples": unknown_path_lines,
     }
 
 
@@ -213,6 +242,13 @@ def print_summary(report: Dict) -> None:
         print("  No IP scores available.")
 
     print(f"\nSuspicious lines stored: {len(report['suspicious_lines'])}")
+
+    print("\nUnknown path examples:")
+    if report.get("unknown_path_examples"):
+        for line in report["unknown_path_examples"]:
+            print(f"  {line}")
+    else:
+        print("  No unknown path examples.")
 
 
 def parse_args() -> argparse.Namespace:
