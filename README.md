@@ -2,11 +2,16 @@
 
 A Python-based security log analysis project for identifying language-related attack patterns in server logs.
 
-This project focuses on:
-- detecting suspicious requests in web server and authentication logs
-- identifying Cyrillic and multilingual attack attempts
-- extracting keywords often seen in brute-force or probing activity
-- producing simple JSON reports for further analysis
+## Overview
+
+This project focuses on security log analysis with multilingual awareness.
+
+Instead of treating logs as plain text, it identifies:
+- suspicious patterns in HTTP requests
+- common attack vectors (e.g. admin panels, login endpoints)
+- multilingual and encoded payloads (including Cyrillic)
+
+The goal is to provide a simple but effective way to interpret real-world attack traffic.
 
 ## Why this project exists
 
@@ -40,9 +45,11 @@ Initial working prototype.
 ## Usage
 
 ```bash
+python3 src/analyzer.py /var/log/nginx/access.log --output output/nginx_report.json
+```
+```bash
 python3 src/analyzer.py sample_logs/nginx_access_sample.log --output output/report.json
 ```
-
 ## Example output
 
 ```json
@@ -63,7 +70,19 @@ python3 src/analyzer.py sample_logs/nginx_access_sample.log --output output/repo
 ```
 ## Real-world usage
 
-This tool is designed to analyze real server logs from:
+## Real-world testing
+
+This tool has been tested against real-world Nginx access logs from a publicly exposed server.
+
+The logs include:
+- automated scanning traffic
+- brute-force login attempts
+- common probing patterns (e.g. `/admin`, `/login`, `/passwd`)
+
+The analysis works with:
+- standard Latin-based attack patterns
+- URL-encoded paths
+- multilingual payloads (e.g. Cyrillic) when present
 
 - Nginx access logs
 - SSH authentication logs
