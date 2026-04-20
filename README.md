@@ -42,6 +42,10 @@ That means:
 - separates high-frequency paths from suspicious paths
 - classifies anomalous requests such as empty, malformed, and non-HTTP traffic
 
+## Requirements
+
+- Python 3.10+ (tested with Python 3.13)
+
 ## Current status
 
 Initial working prototype.
