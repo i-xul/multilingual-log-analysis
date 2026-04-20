@@ -93,23 +93,25 @@ def analyze_lines(lines: List[str]) -> Dict:
         ip_stats[ip]["requests"] += 1
 
         keyword_hits = find_suspicious_keywords(line)
+
         if keyword_hits:
             keyword_counter.update(keyword_hits)
             ip_stats[ip]["suspicious_hits"] += 1
 
-            suspicious_lines.append(
-                {
-                    "ip": ip,
-                    "category": category,
-                    "keywords": keyword_hits,
-                    "line": line,
-                }
-            )
+            suspicious_lines.append({
+                "ip": ip,
+                "category": category,
+                "keywords": keyword_hits,
+                "line": line,
+            })
 
+    # Build IP scores
     ip_scores = {}
+
     for ip, stats in ip_stats.items():
         requests = stats["requests"]
         suspicious_hits = stats["suspicious_hits"]
+
         score = suspicious_hits / requests if requests else 0.0
 
         ip_scores[ip] = {
@@ -117,6 +119,20 @@ def analyze_lines(lines: List[str]) -> Dict:
             "suspicious_hits": suspicious_hits,
             "score": round(score, 2),
         }
+
+    return {
+        "total_lines": len(lines),
+        "categorized_lines": {
+            "ru_or_ua": categorized_counter.get("ru_or_ua", 0),
+            "latin_only": categorized_counter.get("latin_only", 0),
+            "mixed": categorized_counter.get("mixed", 0),
+            "unknown": categorized_counter.get("unknown", 0),
+        },
+        "top_source_ips": dict(ip_counter.most_common(10)),
+        "suspicious_keyword_hits": dict(keyword_counter.most_common()),
+        "ip_scores": ip_scores,
+        "suspicious_lines": suspicious_lines,
+    }
 
     return {
         "total_lines": len(lines),
