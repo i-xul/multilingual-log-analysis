@@ -133,7 +133,7 @@ def analyze_lines(lines: List[str]) -> Dict:
         path = extract_path(decoded_line)
         path_counter[path] += 1
         if path == "unknown" and len(unknown_path_lines) < 10:
-        unknown_path_lines.append(line)
+            unknown_path_lines.append(line)
 
         if ip not in ip_stats:
             ip_stats[ip] = {
