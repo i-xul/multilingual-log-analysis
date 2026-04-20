@@ -59,3 +59,24 @@ python3 src/analyzer.py sample_logs/nginx_access_sample.log --output output/repo
     "админ": 1
   }
 }
+
+```markdown
+# Future ideas
+
+## Version 2
+- IP-based aggregation
+- endpoint clustering
+- request method statistics
+- suspicious path detection
+- user-agent anomaly detection
+
+## Security integrations
+- Fail2ban filter helper output
+- blocklist generation
+- cron-compatible reporting
+
+## Language analysis improvements
+- better RU vs UA differentiation
+- transliterated keyword detection
+- phrase scoring
+- mixed-language payload analysis
