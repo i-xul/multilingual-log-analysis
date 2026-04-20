@@ -126,9 +126,12 @@ def save_json(data: Dict, output_path: str) -> None:
 
 
 def print_summary(report: Dict) -> None:
-    """Print a compact terminal summary."""
+    """Print a clean CLI summary for quick analysis."""
+
     print("\n=== Multilingual Log Analysis Summary ===")
-    print(f"Total lines: {report['total_lines']}")
+
+    print(f"\nTotal lines: {report['total_lines']}")
+
     print("\nCategories:")
     for key, value in report["categorized_lines"].items():
         print(f"  {key}: {value}")
@@ -140,7 +143,7 @@ def print_summary(report: Dict) -> None:
     else:
         print("  No IPs detected.")
 
-    print("\nSuspicious keyword hits:")
+    print("\nSuspicious keywords:")
     if report["suspicious_keyword_hits"]:
         for keyword, count in report["suspicious_keyword_hits"].items():
             print(f"  {keyword}: {count}")
