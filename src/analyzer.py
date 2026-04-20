@@ -70,6 +70,15 @@ def find_suspicious_keywords(text: str) -> List[str]:
     return hits
 
 
+def extract_ip(text: str) -> str:
+    """
+    Try to extract an IPv4 address from a log line.
+    Returns 'unknown' if no IP is found.
+    """
+    match = re.search(r"\b(?:\d{1,3}\.){3}\d{1,3}\b", text)
+    return match.group(0) if match else "unknown"
+
+
 def analyze_lines(lines: List[str]) -> Dict:
     categorized_counter = Counter()
     keyword_counter = Counter()
@@ -105,13 +114,11 @@ def analyze_lines(lines: List[str]) -> Dict:
                 "line": line,
             })
 
-    # Build IP scores
     ip_scores = {}
 
     for ip, stats in ip_stats.items():
         requests = stats["requests"]
         suspicious_hits = stats["suspicious_hits"]
-
         score = suspicious_hits / requests if requests else 0.0
 
         ip_scores[ip] = {
@@ -134,36 +141,6 @@ def analyze_lines(lines: List[str]) -> Dict:
         "suspicious_lines": suspicious_lines,
     }
 
-    return {
-        "total_lines": len(lines),
-        "categorized_lines": {
-            "ru_or_ua": categorized_counter.get("ru_or_ua", 0),
-            "latin_only": categorized_counter.get("latin_only", 0),
-            "mixed": categorized_counter.get("mixed", 0),
-            "unknown": categorized_counter.get("unknown", 0),
-        },
-        "top_source_ips": dict(ip_counter.most_common(10)),
-        "suspicious_keyword_hits": dict(keyword_counter.most_common()),
-        "ip_scores": ip_scores,
-        "suspicious_lines": suspicious_lines,
-    }
-            )
-
-    return {
-        "total_lines": len(lines),
-        "categorized_lines": {
-            "ru_or_ua": categorized_counter.get("ru_or_ua", 0),
-            "latin_only": categorized_counter.get("latin_only", 0),
-            "mixed": categorized_counter.get("mixed", 0),
-            "unknown": categorized_counter.get("unknown", 0),
-        },
-        "top_source_ips": dict(ip_counter.most_common(10)),
-        "suspicious_keyword_hits": dict(keyword_counter.most_common()),
-        "ip_scores": ip_scores,
-        "top_paths": dict(path_counter.most_common(10)),
-        "suspicious_lines": suspicious_lines,
-    }
-
 
 def save_json(data: Dict, output_path: str) -> None:
     """Write analysis result into a JSON file."""
@@ -176,7 +153,6 @@ def print_summary(report: Dict) -> None:
     """Print a clean CLI summary for quick analysis."""
 
     print("\n=== Multilingual Log Analysis Summary ===")
-
     print(f"\nTotal lines: {report['total_lines']}")
 
     print("\nCategories:")
@@ -196,6 +172,22 @@ def print_summary(report: Dict) -> None:
             print(f"  {keyword}: {count}")
     else:
         print("  No suspicious keywords found.")
+
+    print("\nTop suspicious IP scores:")
+    if report.get("ip_scores"):
+        sorted_scores = sorted(
+            report["ip_scores"].items(),
+            key=lambda item: item[1]["score"],
+            reverse=True,
+        )[:10]
+
+        for ip, data in sorted_scores:
+            print(
+                f"  {ip}: score={data['score']} "
+                f"(requests={data['requests']}, suspicious_hits={data['suspicious_hits']})"
+            )
+    else:
+        print("  No IP scores available.")
 
     print(f"\nSuspicious lines stored: {len(report['suspicious_lines'])}")
 
