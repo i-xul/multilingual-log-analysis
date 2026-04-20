@@ -40,4 +40,4 @@ Initial working prototype.
 ## Usage
 
 ```bash
-python3 src/analyzer.py sample_logs/nginx_access_sample.log
+python3 src/analyzer.py sample_logs/nginx_access_sample.log --output output/report.json
