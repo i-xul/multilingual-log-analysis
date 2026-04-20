@@ -58,7 +58,7 @@ python3 src/analyzer.py sample_logs/nginx_access_sample.log --output output/repo
     "password": 1,
     "админ": 1
   }
-}
+}```
 
 
 # Future ideas
