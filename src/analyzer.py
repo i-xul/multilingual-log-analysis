@@ -87,7 +87,7 @@ def analyze_lines(lines: List[str]) -> Dict:
     ip_stats = {}
 
     for line in lines:
-    decoded_line = unquote(line)
+        decoded_line = unquote(line)
         category = detect_language_category(decoded_line)
         categorized_counter[category] += 1
 
