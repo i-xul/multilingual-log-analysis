@@ -41,6 +41,7 @@ That means:
 - highlights suspicious probes such as `/.git/config`, `/etc/passwd`, and admin/login endpoints
 - separates high-frequency paths from suspicious paths
 - classifies anomalous requests such as empty, malformed, and non-HTTP traffic
+- exports blocklist candidates for manual review and future Fail2ban-aligned workflows
 
 ## Requirements
 
