@@ -61,7 +61,18 @@ python3 src/analyzer.py sample_logs/nginx_access_sample.log --output output/repo
   }
 }
 ```
+## Real-world usage
 
+This tool is designed to analyze real server logs from:
+
+- Nginx access logs
+- SSH authentication logs
+- Self-hosted environments
+
+Example use cases:
+- detecting brute-force login attempts
+- identifying non-Latin attack patterns
+- analyzing suspicious traffic sources
 
 # Future ideas
 
