@@ -78,22 +78,34 @@ def extract_ip(text: str) -> str:
     """
     match = re.search(r"\b(?:\d{1,3}\.){3}\d{1,3}\b", text)
     return match.group(0) if match else "unknown"
-
+    
+def extract_path(text: str) -> str:
+    """
+    Try to extract the request path from a typical Nginx access log line.
+    Returns 'unknown' if no path is found.
+    """
+    match = re.search(r'"[A-Z]+\s+([^ ]+)\s+HTTP/[0-9.]+"', text)
+    return match.group(1) if match else "unknown"
 
 def analyze_lines(lines: List[str]) -> Dict:
     categorized_counter = Counter()
     keyword_counter = Counter()
     ip_counter = Counter()
+    path_counter = Counter()
     suspicious_lines = []
     ip_stats = {}
 
     for line in lines:
         decoded_line = unquote(line)
+
         category = detect_language_category(decoded_line)
         categorized_counter[category] += 1
 
         ip = extract_ip(decoded_line)
         ip_counter[ip] += 1
+
+        path = extract_path(decoded_line)
+        path_counter[path] += 1
 
         if ip not in ip_stats:
             ip_stats[ip] = {
@@ -111,6 +123,7 @@ def analyze_lines(lines: List[str]) -> Dict:
 
             suspicious_lines.append({
                 "ip": ip,
+                "path": path,
                 "category": category,
                 "keywords": keyword_hits,
                 "line": line,
@@ -138,6 +151,7 @@ def analyze_lines(lines: List[str]) -> Dict:
             "unknown": categorized_counter.get("unknown", 0),
         },
         "top_source_ips": dict(ip_counter.most_common(10)),
+        "top_paths": dict(path_counter.most_common(10)),
         "suspicious_keyword_hits": dict(keyword_counter.most_common()),
         "ip_scores": ip_scores,
         "suspicious_lines": suspicious_lines,
@@ -167,6 +181,13 @@ def print_summary(report: Dict) -> None:
             print(f"  {ip}: {count}")
     else:
         print("  No IPs detected.")
+
+    print("\nTop paths:")
+    if report.get("top_paths"):
+        for path, count in report["top_paths"].items():
+            print(f"  {path}: {count}")
+    else:
+        print("  No paths detected.")
 
     print("\nSuspicious keywords:")
     if report["suspicious_keyword_hits"]:
