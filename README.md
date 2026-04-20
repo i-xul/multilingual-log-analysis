@@ -41,3 +41,21 @@ Initial working prototype.
 
 ```bash
 python3 src/analyzer.py sample_logs/nginx_access_sample.log --output output/report.json
+
+## Example output
+
+```json
+{
+  "total_lines": 3,
+  "categorized_lines": {
+    "ru_or_ua": 1,
+    "latin_only": 1,
+    "mixed": 1,
+    "unknown": 0
+  },
+  "suspicious_keyword_hits": {
+    "admin": 1,
+    "password": 1,
+    "админ": 1
+  }
+}
