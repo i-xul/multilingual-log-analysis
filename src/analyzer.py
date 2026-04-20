@@ -87,10 +87,11 @@ def analyze_lines(lines: List[str]) -> Dict:
     ip_stats = {}
 
     for line in lines:
-        category = detect_language_category(line)
+    decoded_line = unquote(line)
+        category = detect_language_category(decoded_line)
         categorized_counter[category] += 1
 
-        ip = extract_ip(line)
+        ip = extract_ip(decoded_line)
         ip_counter[ip] += 1
 
         if ip not in ip_stats:
@@ -101,7 +102,7 @@ def analyze_lines(lines: List[str]) -> Dict:
 
         ip_stats[ip]["requests"] += 1
 
-        keyword_hits = find_suspicious_keywords(line)
+        keyword_hits = find_suspicious_keywords(decoded_line)
 
         if keyword_hits:
             keyword_counter.update(keyword_hits)
